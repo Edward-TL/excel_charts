@@ -1,12 +1,9 @@
-```python
 """scatter.py
 
-Implementation of a scatter chart using OpenPyXL.
+Implementation of a scatter chart using xlsxwriter.
 """
 
 from __future__ import annotations
-
-from openpyxl.chart import ScatterChart, Reference, Series
 
 from .core import BaseChart, MoneyAxis
 
@@ -19,35 +16,34 @@ class ScatterChartWrapper(BaseChart):
     """
 
     def _create_chart(self):
-        chart = ScatterChart()
-        chart.title = "Scatter Chart"
-        chart.style = 13
-        chart.x_axis.title = "X Axis"
-        chart.y_axis.title = "Y Axis"
+        # Create chart object
+        chart = self._workbook.add_chart({"type": "scatter"})
+        chart.set_title({"name": self.title})
+        if self.x_axis_title:
+             chart.set_x_axis({"name": self.x_axis_title})
+        if self.y_axis_title:
+             chart.set_y_axis({"name": self.y_axis_title})
 
         # Determine column mapping based on money_axis
         if self.money_axis == MoneyAxis.Y:
-            x_col = 1
-            y_col = 2
-        else:
-            x_col = 2
+            # X is col 0, Y is col 1
+            x_col = 0
             y_col = 1
+        else:
+            # X is col 1, Y is col 0
+            x_col = 1
+            y_col = 0
 
-        data = self.data
-        # Write DataFrame values to worksheet
-        for r_idx, row in enumerate(data.itertuples(index=False), start=2):
-            self._ws.cell(row=r_idx, column=1, value=getattr(row, data.columns[x_col - 1]))
-            self._ws.cell(row=r_idx, column=2, value=getattr(row, data.columns[y_col - 1]))
+        # Create ranges using source helpers
+        x_ref = self.source.get_category_ref(x_col)
+        y_ref = self.source.get_ref(y_col)
+        
+        series_name = [self.source.worksheet.get_name(), self.source.start_row, self.source.start_col + y_col]
 
-        # Header row
-        self._ws.cell(row=1, column=1, value=data.columns[x_col - 1])
-        self._ws.cell(row=1, column=2, value=data.columns[y_col - 1])
-
-        min_row = 1
-        max_row = len(data) + 1
-        x_ref = Reference(self._ws, min_col=1, min_row=min_row, max_row=max_row)
-        y_ref = Reference(self._ws, min_col=2, min_row=min_row, max_row=max_row)
-        series = Series(y_ref, x_ref, title_from_data=True)
-        chart.series.append(series)
+        chart.add_series({
+            "name": series_name,
+            "categories": x_ref,
+            "values": y_ref,
+        })
+        
         return chart
-```

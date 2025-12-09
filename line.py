@@ -1,12 +1,16 @@
-```python
 """line.py
 
-Implementation of a line chart using OpenPyXL.
+Implementation of a line chart using xlsxwriter.
 """
 
 from __future__ import annotations
 
-from openpyxl.chart import LineChart, Reference
+from .core import BaseChart, MoneyAxis
+
+
+from __future__ import annotations
+
+from typing import Any
 
 from .core import BaseChart, MoneyAxis
 
@@ -18,39 +22,79 @@ class LineChartWrapper(BaseChart):
     X‑axis values and the second column for the Y‑axis values.
     """
 
+    def __init__(
+        self, 
+        *args, 
+        max_x_axis_value: Any | None = None,
+        x_major_unit: float | None = None,
+        x_minor_unit: float | None = None,
+        y_major_unit: float | None = None,
+        y_minor_unit: float | None = None,
+        **kwargs
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.max_x_axis_value = max_x_axis_value
+        self.x_major_unit = x_major_unit
+        self.x_minor_unit = x_minor_unit
+        self.y_major_unit = y_major_unit
+        self.y_minor_unit = y_minor_unit
+
     def _create_chart(self):
-        chart = LineChart()
-        chart.title = "Line Chart"
-        chart.style = 12
-        chart.y_axis.title = "Y Axis"
-        chart.x_axis.title = "X Axis"
-
-        # Determine which column is the money axis
+        # Create chart object
+        chart = self._workbook.add_chart({"type": "line"})
+        chart.set_title({"name": self.title})
+        
+        # Configure Y axis
+        y_axis_options = {}
+        if self.y_axis_title:
+             y_axis_options["name"] = self.y_axis_title
+        if self.y_major_unit is not None:
+             y_axis_options["major_unit"] = self.y_major_unit
+        if self.y_minor_unit is not None:
+             y_axis_options["minor_unit"] = self.y_minor_unit
+        
+        if y_axis_options:
+            chart.set_y_axis(y_axis_options)
+        
+        # Configure X axis
+        x_axis_options = {}
+        if self.x_axis_title:
+             x_axis_options["name"] = self.x_axis_title
+        if self.max_x_axis_value is not None:
+             x_axis_options["max"] = self.max_x_axis_value
+        if self.x_major_unit is not None:
+             x_axis_options["major_unit"] = self.x_major_unit
+        if self.x_minor_unit is not None:
+             x_axis_options["minor_unit"] = self.x_minor_unit
+        
+        if x_axis_options:
+            chart.set_x_axis(x_axis_options)
+        
+        # Determine cols
         if self.money_axis == MoneyAxis.Y:
-            y_col = 2
-            x_col = 1
+            # X is col 0, Y is col 1
+            cat_col = 0
+            val_col = 1
         else:
-            y_col = 1
-            x_col = 2
+             # X is col 1, Y is col 0
+            cat_col = 1
+            val_col = 0
 
-        data = self.data
-        # OpenPyXL expects a worksheet with data; we write the DataFrame to the sheet first.
-        for r_idx, row in enumerate(data.itertuples(index=False), start=2):
-            # Write X value
-            self._ws.cell(row=r_idx, column=1, value=getattr(row, data.columns[x_col - 1]))
-            # Write Y value
-            self._ws.cell(row=r_idx, column=2, value=getattr(row, data.columns[y_col - 1]))
+        # Create ranges using source helpers
+        categories_ref = self.source.get_category_ref(cat_col)
+        values_ref = self.source.get_ref(val_col)
 
-        # Header row
-        self._ws.cell(row=1, column=1, value=data.columns[x_col - 1])
-        self._ws.cell(row=1, column=2, value=data.columns[y_col - 1])
+        # Series name comes from the header row of the value column
+        series_name = [
+            self.source.worksheet.get_name(),
+            self.source.start_row,
+            self.source.start_col + val_col
+            ]
 
-        # Define data range for the chart
-        min_row = 1
-        max_row = len(data) + 1
-        x_ref = Reference(self._ws, min_col=1, min_row=min_row, max_row=max_row)
-        y_ref = Reference(self._ws, min_col=2, min_row=min_row, max_row=max_row)
-        chart.add_data(y_ref, titles_from_data=True)
-        chart.set_categories(x_ref)
+        chart.add_series({
+            "name": series_name,
+            "categories": categories_ref,
+            "values": values_ref,
+        })
+        
         return chart
-```

@@ -1,12 +1,9 @@
-```python
 """donut.py
 
-Implementation of a donut (pie) chart using OpenPyXL.
+Implementation of a donut (pie) chart using xlsxwriter.
 """
 
 from __future__ import annotations
-
-from openpyxl.chart import PieChart, Reference
 
 from .core import BaseChart, MoneyAxis
 
@@ -14,38 +11,29 @@ from .core import BaseChart, MoneyAxis
 class DonutChartWrapper(BaseChart):
     """Donut chart wrapper.
 
-    OpenPyXL does not have a dedicated ``DonutChart`` class, but a ``PieChart``
-    can be styled to appear as a donut by setting the ``holeSize`` attribute.
-    This implementation writes the DataFrame to the worksheet and creates a
-    ``PieChart`` with a hole.
+    Uses xlsxwriter 'doughnut' chart type.
     """
 
     def _create_chart(self):
-        chart = PieChart()
-        chart.title = "Donut Chart"
-        chart.style = 10
-        # ``holeSize`` is a percentage (0‑100). 50 gives a classic donut look.
-        if hasattr(chart, "holeSize"):
-            chart.holeSize = 50
-        else:
-            # Fallback – some older versions of openpyxl ignore ``holeSize``.
-            pass
+        # Create chart
+        chart = self._workbook.add_chart({"type": "doughnut"})
+        chart.set_title({"name": self.title})
+        chart.set_hole_size(50)
+        
+        # Ranges
+        # Donut Chart: 1st col categories, 2nd col values
+        cat_col = 0
+        val_col = 1
 
-        # For a donut we treat the first column as categories and the second as values.
-        data = self.data
-        # Write data to worksheet
-        for r_idx, row in enumerate(data.itertuples(index=False), start=2):
-            self._ws.cell(row=r_idx, column=1, value=getattr(row, data.columns[0]))
-            self._ws.cell(row=r_idx, column=2, value=getattr(row, data.columns[1]))
-        # Header row
-        self._ws.cell(row=1, column=1, value=data.columns[0])
-        self._ws.cell(row=1, column=2, value=data.columns[1])
+        cats_ref = self.source.get_category_ref(cat_col)
+        vals_ref = self.source.get_ref(val_col)
+        
+        series_name = [self.source.worksheet.get_name(), self.source.start_row, self.source.start_col + val_col]
 
-        min_row = 1
-        max_row = len(data) + 1
-        labels = Reference(self._ws, min_col=1, min_row=min_row, max_row=max_row)
-        values = Reference(self._ws, min_col=2, min_row=min_row, max_row=max_row)
-        chart.add_data(values, titles_from_data=True)
-        chart.set_categories(labels)
+        chart.add_series({
+            "name": series_name,
+            "categories": cats_ref,
+            "values": vals_ref,
+        })
+        
         return chart
-```
