@@ -2,20 +2,14 @@
 
 Implementation of a line chart using xlsxwriter.
 """
-
-from __future__ import annotations
-
-from .core import BaseChart, MoneyAxis
-
-
 from __future__ import annotations
 
 from typing import Any
 
-from .core import BaseChart, MoneyAxis
+from excel_charts.core import BaseChart, MoneyAxis
 
 
-class LineChartWrapper(BaseChart):
+class Line(BaseChart):
     """Line chart wrapper.
 
     Expects the DataFrame to have at least two columns: the first column for the

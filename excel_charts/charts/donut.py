@@ -5,10 +5,10 @@ Implementation of a donut (pie) chart using xlsxwriter.
 
 from __future__ import annotations
 
-from .core import BaseChart, MoneyAxis
+from excel_charts.core import BaseChart, MoneyAxis
 
 
-class DonutChartWrapper(BaseChart):
+class Donut(BaseChart):
     """Donut chart wrapper.
 
     Uses xlsxwriter 'doughnut' chart type.

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from .core import BaseChart, MoneyAxis
+from excel_charts.core import BaseChart, MoneyAxis
 
 
 class BarOrientation(str, Enum):
@@ -17,7 +17,7 @@ class BarOrientation(str, Enum):
     HORIZONTAL = "horizontal"
 
 
-class BarChartWrapper(BaseChart):
+class Bar(BaseChart):
     """Bar chart wrapper.
 
     Parameters

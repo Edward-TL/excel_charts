@@ -5,10 +5,10 @@ Implementation of a scatter chart using xlsxwriter.
 
 from __future__ import annotations
 
-from .core import BaseChart, MoneyAxis
+from excel_charts.core import BaseChart, MoneyAxis
 
 
-class ScatterChartWrapper(BaseChart):
+class Scatter(BaseChart):
     """Scatter chart wrapper.
 
     The DataFrame should contain two numeric columns. The ``money_axis``
