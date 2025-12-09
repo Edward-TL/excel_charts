@@ -1,25 +1,21 @@
-```python
-"""__init__.py
+"""Excel Charts - OOP library for creating Excel charts with xlsxwriter"""
 
-Expose the chart wrapper classes for convenient import.
-"""
-
-from .core import BaseChart, ColorPalette, MoneyAxis
+from .core import BaseChart, ColorPalette, MoneyAxis, Source
 from .line import LineChartWrapper
 from .scatter import ScatterChartWrapper
 from .bar import BarChartWrapper, BarOrientation
 from .donut import DonutChartWrapper
-from .tree import TreeChartWrapper
+
+__version__ = "0.1.0"
 
 __all__ = [
     "BaseChart",
     "ColorPalette",
     "MoneyAxis",
+    "Source",
     "LineChartWrapper",
     "ScatterChartWrapper",
     "BarChartWrapper",
     "BarOrientation",
     "DonutChartWrapper",
-    "TreeChartWrapper",
 ]
-```

@@ -13,13 +13,12 @@ from pathlib import Path
 import pandas as pd
 import xlsxwriter
 
-from eternal_lagoon import (
+from excel_charts import (
     LineChartWrapper,
     ScatterChartWrapper,
     BarChartWrapper,
     BarOrientation,
     DonutChartWrapper,
-    TreeChartWrapper,
     MoneyAxis,
 )
 
