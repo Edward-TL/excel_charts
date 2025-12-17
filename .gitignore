@@ -42,3 +42,4 @@ htmlcov/
 *.xlsx
 *.xls
 demo_charts.xlsx
+.DS_Store
