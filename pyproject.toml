@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Edward Toledo", email = "edward.toledo.lopez.etl15@gmail.com"}
+    {name = "Edward Toledo", email = "edward_tl@hotmail.com"}
 ]
 keywords = ["excel", "charts", "xlsxwriter", "visualization", "pandas"]
 classifiers = [
