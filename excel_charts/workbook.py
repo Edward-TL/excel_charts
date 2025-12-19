@@ -26,6 +26,7 @@ class Writter:
 
         for sheet_name in self.sheet_names:
             self.wb.add_worksheet(sheet_name)
+            print(f"Adding {sheet_name=}")
 
     def close(self) -> None:
         """

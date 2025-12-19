@@ -5,3 +5,4 @@ from .chart.scatter import Scatter
 from .chart.bar import Bar, BarOrientation
 from .chart.donut import Donut
 from .table import Table
+from .workbook import Writter

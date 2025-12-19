@@ -65,6 +65,7 @@ class Table:
     end_row: int = field(init=False, default=0)
     end_col: int = field(init=False, default=0)
     _range: str = field(init=False, default="")
+    is_excel_table: bool = field(init=False, default=False)
     
     def __post_init__(self):
         self.set_dimensions()
@@ -76,10 +77,10 @@ class Table:
             self.style = copy(self.data)
             self.data = self.data.data
         
-        print(type(self.wb))
+        # print(type(self.wb))
         if isinstance(self.wb, Writter):
             self.wb = copy(self.wb.wb)
-            print(type(self.wb))
+            # print(type(self.wb))
         
         self.ws = self.wb.get_worksheet_by_name(self.worksheet)
         self.excel_name = self.name.lower().replace(' ', '_')
@@ -135,12 +136,21 @@ class Table:
         # print(type(self.wb), type(self.ws), as_table)
         
 
-    def get_ref(self, col_offset: int) -> list:
+    def get_ref(self, col_offset: int = 0) -> list | str:
         """Returns [sheet, start_row, col, end_row, col] for a specific column offset from start."""
         col = self.start_col + col_offset
+        
+        if self.is_excel_table:
+            # col_offset 0 corresponds to the FIRST column in the dataframe
+            # Assuming col_offset matches the index in self.data.columns
+            if 0 <= col_offset < len(self.data.columns):
+                col_name = self.data.columns[col_offset]
+                # Return structured reference e.g. "table_name[column_name]"
+                return f"{self.excel_name}[{col_name}]"
+        
         # We skip the header row for data references usually
         data_start_row = self.start_row + 1
-        return [data_start_row, col, self.end_row, col]
+        return [self.worksheet, data_start_row, col, self.end_row, col]
 
     def get_category_ref(self, col_offset: int = 0) -> list:
          # Usually categories are the specific column without header?
@@ -237,3 +247,4 @@ class Table:
             ws = self.ws
         
         ws.add_table(self._range, options)
+        self.is_excel_table = True
