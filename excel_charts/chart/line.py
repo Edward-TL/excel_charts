@@ -18,9 +18,6 @@ class Line(BaseChart):
     Expects the DataFrame to have at least two columns: the first column for the
     X‑axis values and the second column for the Y‑axis values.
     """
-    chart: Chart | None = None
-    width: int | None = None
-    height: int | None = None
     
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -43,21 +40,14 @@ class Line(BaseChart):
         self.set_x_axis()
 
         # Create ranges using source helpers
-        
-        # Check if we have multiple series (cols > 2)
-        # Col 0 is categories (X axis)
-        # Col 1..N are values (Series 1..N)
-        reference_cols = {
-                c: col for c, col in enumerate(self.source.data.columns)
-            }
 
         # Categories are always column 0
         categories_ref = self.source.get_category_ref(0)
 
-        for col_idx in range(1, len(reference_cols)):
+        for col_idx in range(1, len(self.reference_cols)):
 
             if self.skip is not None:
-                if reference_cols[col_idx] in self.skip:
+                if self.columns_idx[col_idx] in self.skip:
                     continue
             
             # print(f"Adding: {reference_cols[col_idx]=}")
@@ -69,12 +59,21 @@ class Line(BaseChart):
                 self.source.start_row - 1,
                 self.source.start_col + col_idx
             ]
-
-            self.chart.add_series({
+            series = {
                 "name": series_name,
                 "categories": categories_ref,
                 "values": values_ref,
-            })
+            }
+
+            line = {}
+            if self.colors:
+                print(self.reference_cols[col_idx])
+                line["color"] = self.colors[self.reference_cols[col_idx]]
+
+            if line:
+                series["line"] = line
+
+            self.chart.add_series(series)
 
         self.chart.set_size(
             {
@@ -82,6 +81,7 @@ class Line(BaseChart):
                 'height': self.height
             }
         )
+
         self.ws.insert_chart(
             self.chart_position,
             self.chart
