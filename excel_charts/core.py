@@ -2,7 +2,7 @@
 import abc
 from dataclasses import dataclass, field
 from typing import Optional
-from enum import Enum
+from enum import Enum, StrEnum
 import pandas as pd
 from xlsxwriter.worksheet import Worksheet
 from xlsxwriter.workbook import Workbook
@@ -64,6 +64,20 @@ class ColorPalette:
     category_colors: dict = field(default_factory=dict)
 
 
+@dataclass
+class Line:
+    color: str = "#FFFFFF"
+    width: int = 2
+    style: str = "solid"
+
+
+class Units(StrEnum):
+    pixels = "pixels"
+    cols = "columns"
+    rows = "rows"
+    cm = "cm"
+    inches = "in"
+    
 
 @dataclass
 class BaseChart(abc.ABC):
@@ -73,15 +87,25 @@ class BaseChart(abc.ABC):
     chart_position: str = "A1"
     worksheet: str = "Sheet1"
     title: Optional[str] = None
-    x_axis: Axis | None = None
-    y_axis: Axis | None = None
+    x_axis: Optional[Axis] = None
+    y_axis: Optional[Axis] = None
     money_axis: MoneyAxis = MoneyAxis.Y
-    color_palette: ColorPalette | None = None
+    color_palette: Optional[ColorPalette] = None
     wb: Writter | Workbook = field(init=False)
     ws: Worksheet = field(init=False)
-    chart: Chart | None = None
+    chart: Optional[Chart] = None
     skip: Optional[list[str]] = None
+    reference_cols: dict = field(init=False)
+    line: Optional[Line] = None
+
+    width: Optional[int] = None
+    height: Optional[int] = None
+    units: Units = Units.pixels
+    width_units: Optional[Units] = None
+    height_units: Optional[Units] = None
+    colors: Optional[dict[str: str]|list[str]] = None
     
+
     def __post_init__(self) -> None:
         if self.title is None:
             self.title = self.source.name
@@ -90,7 +114,23 @@ class BaseChart(abc.ABC):
 
         self.wb = self.source.wb
         self.ws = self.wb.get_worksheet_by_name(self.worksheet)
+        self.reference_cols = {
+                c: col for c, col in enumerate(self.source.data.columns)
+            }
+        self.columns_idx = {
+                col: c for c, col in enumerate(self.source.data.columns)
+            }
 
+        self._convert_units()
+
+    def _convert_units(self) -> None:
+        """
+        Convert units to pixels.
+        """
+        if self.units == Units.cols:
+            self.width = self.width * 64
+            self.height = self.height * 64
+        
     @abc.abstractmethod
     def _create_chart(self) -> Chart:
         """Create and configure the specific xlsxwriter chart instance."""

@@ -135,7 +135,6 @@ class Table:
             self.add_title()
         # print(type(self.wb), type(self.ws), as_table)
         
-
     def get_ref(self, col_offset: int = 0) -> list | str:
         """Returns [sheet, start_row, col, end_row, col] for a specific column offset from start."""
         col = self.start_col + col_offset
