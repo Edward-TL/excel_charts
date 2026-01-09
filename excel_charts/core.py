@@ -72,12 +72,27 @@ class Line:
 
 
 class Units(StrEnum):
+    """Enum to indicate the unit of measurement."""
     pixels = "pixels"
     cols = "columns"
     rows = "rows"
     cm = "cm"
     inches = "in"
-    
+
+@dataclass
+class UnitConverter:
+    """Unit converter for charts, using pixels as base unit."""
+    cols: int = 64
+    rows: int = 20
+    cm: int = 28
+    inches: int = 72
+    pixels: int = 1
+
+    def __post_init__(self) -> None:
+        self.columns = self.cols
+        self.row = self.rows
+
+unit_converter = UnitConverter()
 
 @dataclass
 class BaseChart(abc.ABC):
@@ -101,8 +116,8 @@ class BaseChart(abc.ABC):
     width: Optional[int] = None
     height: Optional[int] = None
     units: Units = Units.pixels
-    width_units: Optional[Units] = None
-    height_units: Optional[Units] = None
+    width_units: Units = Units.pixels
+    height_units: Units = Units.pixels
     colors: Optional[dict[str: str]|list[str]] = None
     
 
@@ -127,10 +142,16 @@ class BaseChart(abc.ABC):
         """
         Convert units to pixels.
         """
-        if self.units == Units.cols:
-            self.width = self.width * 64
-            self.height = self.height * 64
+        if self.units != Units.pixels:
+            self.width = getattr(unit_converter, self.units) * self.width
+            self.height = getattr(unit_converter, self.units) * self.height
         
+        if self.width_units != Units.pixels:
+            self.width = getattr(unit_converter, self.width_units) * self.width
+        
+        if self.height_units != Units.pixels:
+            self.height = getattr(unit_converter, self.height_units) * self.height
+    
     @abc.abstractmethod
     def _create_chart(self) -> Chart:
         """Create and configure the specific xlsxwriter chart instance."""
